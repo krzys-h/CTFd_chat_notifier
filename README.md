@@ -19,5 +19,4 @@ Tested with CTFd 3.1.1.
 ## TODO
 (contributions welcome!)
 
-* Add a threshold above which solve notifications will stop being sent (otherwise it may get quite irritating with 'sanity check' type challenges)
 * Add "this is the Nth solve" option

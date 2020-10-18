@@ -79,6 +79,18 @@
 						{% if notifier_solve_msg is defined and notifier_solve_msg != None %}value="{{ notifier_solve_msg }}"{% endif %}>
 				</div>
 
+				<div class="form-group">
+					<label>
+						Stop solve notifications after X solves<br>
+						<small class="form-text text-muted">
+							The max number of solves for a notification to be sent, e.g. 3 will send notification only for first 3 people. If not set, will notify for every solve.
+						</small>
+					</label>
+					<input class="form-control" id="notifier_solve_count" name="notifier_solve_count" type="number" min="0"
+						placeholder="infinite"
+						{% if notifier_solve_count is defined and notifier_solve_count != None %}value="{{ notifier_solve_count }}"{% endif %}>
+				</div>
+
 				<input type="hidden" name="nonce" value="{{ nonce }}">
 				<button type="submit" class="btn btn-md btn-primary float-right">Update</button>
 			</form>

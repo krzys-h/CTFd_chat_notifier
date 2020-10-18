@@ -1,8 +1,9 @@
 from CTFd.plugins.challenges import BaseChallenge
-from CTFd.utils.modes import TEAMS_MODE, get_mode_as_word
+from CTFd.utils.modes import TEAMS_MODE, get_mode_as_word, get_model
 from CTFd.utils.decorators import admins_only
 from CTFd.utils import get_config, set_config
 from CTFd.cache import clear_config
+from CTFd.models import Challenges, Solves, db
 from flask import url_for, Blueprint, render_template, redirect, request, session, abort, Markup
 from functools import wraps
 import requests
@@ -172,6 +173,10 @@ def load(app):
             set_config('notifier_send_notifications', 'notifier_send_notifications' in request.form)
             set_config('notifier_send_solves', 'notifier_send_solves' in request.form)
             set_config('notifier_solve_msg', request.form['notifier_solve_msg'])
+            if request.form['notifier_solve_count']:
+                set_config('notifier_solve_count', int(request.form['notifier_solve_count']))
+            else:
+                set_config('notifier_solve_count', None)
             for setting in get_all_notifier_settings():
                 set_config(setting, request.form[setting])
             return redirect(url_for('chat_notifier.chat_notifier_admin'))
@@ -183,6 +188,7 @@ def load(app):
                 'notifier_send_notifications': get_config('notifier_send_notifications'),
                 'notifier_send_solves': get_config('notifier_send_solves'),
                 'notifier_solve_msg': get_config('notifier_solve_msg'),
+                'notifier_solve_count': get_config('notifier_solve_count'),
             }
             for setting in get_all_notifier_settings():
                 context[setting] = get_config(setting)
@@ -210,7 +216,22 @@ def load(app):
                 challenge = kwargs['challenge']
                 challenge_url = challenge_url='{url_for_listing}#{challenge.name}-{challenge.id}'.format(url_for_listing=url_for('challenges.listing', _external=True), challenge=challenge)
 
-                notifier.notify_solve(get_config('notifier_solve_msg', '{solver} solved {challenge}'), solver.name, solver_url, challenge.name, challenge_url)
+                Model = get_model()
+                solve_count = (
+                    db.session.query(
+                        db.func.count(Solves.id)
+                    )
+                    .filter(Solves.challenge_id == challenge.id)
+                    .join(Model, Solves.account_id == Model.id)
+                    .filter(Model.banned == False, Model.hidden == False)
+                    .scalar()
+                )
+
+                max_solves = get_config('notifier_solve_count')
+                max_solves = int(max_solves) if max_solves is not None else None
+
+                if max_solves is None or solve_count <= max_solves:
+                    notifier.notify_solve(get_config('notifier_solve_msg', '{solver} solved {challenge}'), solver.name, solver_url, challenge.name, challenge_url)
         return wrapper
     BaseChallenge.solve = chal_solve_decorator(BaseChallenge.solve)
 
