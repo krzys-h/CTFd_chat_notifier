@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>Chat Notifier</h1>
+		<h4>Sends chat notifications about solves and admin announcements</h4>
+		<h6><a href="https://github.com/krzys-h/CTFd_chat_notifier">https://github.com/krzys-h/CTFd_chat_notifier</a></h6>
+	</div>
+</div>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+			{% for error in errors %}
+				<div class="alert alert-danger alert-dismissable" role="alert">
+					<span class="sr-only">Error:</span>
+					{{ error }}
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">×</span>
+					</button>
+				</div>
+			{% endfor %}
+
+			<form method="POST" autocomplete="off" class="w-100">
+				<div class="form-group">
+					<label>
+						Notifier type<br>
+						<small class="form-text text-muted">
+							Select the notification backend you want to use
+						</small>
+					</label>
+					<select class="form-control custom-select" id="notifier_type" name="notifier_type">
+						<option value=""></option>
+						{% for type in supported_notifier_types %}
+							<option {% if notifier_type == type %}selected{% endif %}>{{ type }}</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label>
+						Webhook URL<br>
+						<small class="form-text text-muted">
+							Webhook URL to send the messages to
+						</small>
+					</label>
+					<input class="form-control" id="notifier_webhook_url" name="notifier_webhook_url" type="text"
+						placeholder=""
+						{% if notifier_webhook_url is defined and notifier_webhook_url != None %}value="{{ notifier_webhook_url }}"{% endif %}>
+				</div>
+
+				<div class="form-group">
+					<div class="form-check">
+						<label>
+							<input id="notifier_send_solves" name="notifier_send_solves" type="checkbox" {% if notifier_send_solves %}checked{% endif %}>
+							Send solves<br>
+							<small>
+								Send information about solves
+							</small>
+						</label>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="form-check">
+						<label>
+							<input id="notifier_send_notifications" name="notifier_send_notifications" type="checkbox" {% if notifier_send_notifications %}checked{% endif %}>
+							Send notifications<br>
+							<small>
+								Send information about notifications published by admins
+							</small>
+						</label>
+					</div>
+				</div>
+
+				<input type="hidden" name="nonce" value="{{ nonce }}">
+				<button type="submit" class="btn btn-md btn-primary float-right">Update</button>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}
