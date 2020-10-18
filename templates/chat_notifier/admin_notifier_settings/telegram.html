@@ -1,0 +1,23 @@
+<div class="form-group">
+	<label>
+		Bot Token<br>
+		<small class="form-text text-muted">
+			The bot token you recieved from <a href="https://t.me/botfather">BotFather</a>
+		</small>
+	</label>
+	<input class="form-control" id="notifier_telegram_bot_token" name="notifier_telegram_bot_token" type="text"
+		placeholder="id:token"
+		{% if notifier_telegram_bot_token is defined and notifier_telegram_bot_token != None %}value="{{ notifier_telegram_bot_token }}"{% endif %}>
+</div>
+
+<div class="form-group">
+	<label>
+		Chat ID<br>
+		<small class="form-text text-muted">
+			Chat ID to send the message to
+		</small>
+	</label>
+	<input class="form-control" id="notifier_telegram_chat_id" name="notifier_telegram_chat_id" type="text"
+		placeholder="@channelusername"
+		{% if notifier_telegram_chat_id is defined and notifier_telegram_chat_id != None %}value="{{ notifier_telegram_chat_id }}"{% endif %}>
+</div>

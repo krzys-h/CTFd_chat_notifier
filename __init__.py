@@ -97,11 +97,49 @@ class DiscordNotifier(BaseNotifier):
             }]
         })
 
+class TelegramNotifier(BaseNotifier):
+    def get_settings(self):
+        return ['notifier_telegram_bot_token', 'notifier_telegram_chat_id']
+    def get_bot_token(self):
+        return get_config('notifier_telegram_bot_token')
+    def get_chat_id(self):
+        return get_config('notifier_telegram_chat_id')
+    def is_configured(self):
+        return bool(self.get_bot_token()) and bool(self.get_chat_id())
+
+    @staticmethod
+    def _escape(s):
+        badchars = ['\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        for char in badchars:
+            s = s.replace(char, '\\' + char)
+        return s
+
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url):
+        markdown_msg = format.format(
+            solver='[{solver_name}]({solver_url})'.format(solver_name=self._escape(solver_name), solver_url=self._escape(solver_url)),
+            challenge='[{challenge_name}]({challenge_url})'.format(challenge_name=self._escape(challenge_name), challenge_url=self._escape(challenge_url)),
+        )
+        print(markdown_msg)
+
+        requests.post('https://api.telegram.org/bot{bot_token}/sendMessage'.format(bot_token=self.get_bot_token()), json={
+            'chat_id': self.get_chat_id(),
+            'parse_mode': 'MarkdownV2',
+            'text': markdown_msg,
+        })
+
+    def notify_message(self, title, content):
+        requests.post('https://api.telegram.org/bot{bot_token}/sendMessage'.format(bot_token=self.get_bot_token()), json={
+            'chat_id': self.get_chat_id(),
+            'parse_mode': 'MarkdownV2',
+            'text': '*{title}*\n{content}'.format(title=self._escape(title), content=self._escape(content)),
+        })
+
+
 """
 Global dictionary used to hold all the supported chat services. To add support for a new chat service, create a plugin and insert
 your BaseNotifier subclass instance into this dictionary to register it.
 """
-NOTIFIER_CLASSES = {"slack": SlackNotifier(), "discord": DiscordNotifier()}
+NOTIFIER_CLASSES = {"slack": SlackNotifier(), "discord": DiscordNotifier(), "telegram": TelegramNotifier()}
 
 def get_configured_notifier():
     notifier_type = get_config('notifier_type')
