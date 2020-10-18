@@ -119,7 +119,6 @@ class TelegramNotifier(BaseNotifier):
             solver='[{solver_name}]({solver_url})'.format(solver_name=self._escape(solver_name), solver_url=self._escape(solver_url)),
             challenge='[{challenge_name}]({challenge_url})'.format(challenge_name=self._escape(challenge_name), challenge_url=self._escape(challenge_url)),
         )
-        print(markdown_msg)
 
         requests.post('https://api.telegram.org/bot{bot_token}/sendMessage'.format(bot_token=self.get_bot_token()), json={
             'chat_id': self.get_chat_id(),
