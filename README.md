@@ -8,7 +8,7 @@ Clone this repo to `CTFd/plugins/CTFd_chat_notifier` in your CTFd installation d
 
 ## Extending
 
-In your plugin, create a class that extends from `BaseNotifier` and implement the `notify_solve` and `notify_notification` methods. Add an instance of this class to the `NOTIFIER_CLASSES` dictionary.
+In your plugin, create a class that extends from `BaseNotifier` and implement the `notify_solve` and `notify_message` methods. Add an instance of this class to the `NOTIFIER_CLASSES` dictionary.
 
 ## TODO
 (contributions welcome!)
