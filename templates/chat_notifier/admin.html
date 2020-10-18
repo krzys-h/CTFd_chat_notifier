@@ -37,17 +37,11 @@
 					</select>
 				</div>
 
-				<div class="form-group">
-					<label>
-						Webhook URL<br>
-						<small class="form-text text-muted">
-							Webhook URL to send the messages to
-						</small>
-					</label>
-					<input class="form-control" id="notifier_webhook_url" name="notifier_webhook_url" type="text"
-						placeholder=""
-						{% if notifier_webhook_url is defined and notifier_webhook_url != None %}value="{{ notifier_webhook_url }}"{% endif %}>
+				{% for notifiername, subsettings in supported_notifier_settings.items() %}
+				<div id="notifier_settings-{{ notifiername }}" class="notifier_settings">
+					{{ subsettings }}
 				</div>
+				{% endfor %}
 
 				<div class="form-group">
 					<div class="form-check">
@@ -79,4 +73,18 @@
 		</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block entrypoint %}
+{{ super() }}
+<script defer>
+  /* TODO: I can't get jQuery to work because of webpack... */
+  function changeSettingsTo(notifier_name) {
+    document.querySelectorAll('.notifier_settings').forEach((x) => x.style.display = 'none');
+    if (notifier_name)
+      document.getElementById('notifier_settings-' + notifier_name).style.display = 'block';
+  }
+  document.getElementById('notifier_type').addEventListener("change", (e) => changeSettingsTo(e.target.value));
+  changeSettingsTo(document.getElementById('notifier_type').value);
+</script>
 {% endblock %}

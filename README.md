@@ -10,12 +10,16 @@ Tested with CTFd 3.1.1.
 
 ## Extending
 
-In your plugin, create a class that extends from `BaseNotifier` and implement the `notify_solve` and `notify_message` methods. Add an instance of this class to the `NOTIFIER_CLASSES` dictionary.
+1. Create your own plugin (or, if you are implementing a popular service, modify this one and send me a pull request!)
+2. Create a class that extends from `BaseNotifier`
+3. If your notifier requires any configuration (it probably needs at least a webhook url), override the `get_settings` method and create a settings template in `templates/chat_notifier/admin_notifier_settings/your_notifier_type_id.html`. Override `is_configured` to return True only when all required settings are configured correctly.
+4. Implement the `notify_solve` and `notify_message` methods
+5. Register your notifier type by creating an instance of your class and adding it to the `NOTIFIER_CLASSES` dictionary
 
 ## TODO
 (contributions welcome!)
 
 * Telegram support
-* Support per-chat-service configuration
+* Make it possible to change the solve message text
 * Add a threshold above which solve notifications will stop being sent (otherwise it may get quite irritating with 'sanity check' type challenges)
 * Add "this is the Nth solve" option

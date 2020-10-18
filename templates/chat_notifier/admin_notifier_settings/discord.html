@@ -1,0 +1,11 @@
+<div class="form-group">
+	<label>
+		Webhook URL<br>
+		<small class="form-text text-muted">
+			Webhook URL to send the messages to
+		</small>
+	</label>
+	<input class="form-control" id="notifier_discord_webhook_url" name="notifier_discord_webhook_url" type="text"
+		placeholder="https://discord.com/api/webhooks/{webhook.id}/{webhook.token}"
+		{% if notifier_discord_webhook_url is defined and notifier_discord_webhook_url != None %}value="{{ notifier_discord_webhook_url }}"{% endif %}>
+</div>

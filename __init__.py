@@ -3,21 +3,28 @@ from CTFd.utils.modes import TEAMS_MODE, get_mode_as_word
 from CTFd.utils.decorators import admins_only
 from CTFd.utils import get_config, set_config
 from CTFd.cache import clear_config
-from flask import url_for, Blueprint, render_template, redirect, request, session, abort
+from flask import url_for, Blueprint, render_template, redirect, request, session, abort, Markup
 from functools import wraps
 import requests
 
 class BaseNotifier(object):
+    def get_settings(self):
+        return []
     def is_configured(self):
-        return bool(self.get_webhook_url())
-    def get_webhook_url(self):
-        return get_config('notifier_webhook_url')
+        return True
     def notify_solve(self, solver_name, solver_url, challenge_name, challenge_url):
         pass
     def notify_message(self, title, content):
         pass
 
 class SlackNotifier(BaseNotifier):
+    def get_settings(self):
+        return ['notifier_slack_webhook_url']
+    def get_webhook_url(self):
+        return get_config('notifier_slack_webhook_url')
+    def is_configured(self):
+        return bool(self.get_webhook_url())
+
     def notify_solve(self, solver_name, solver_url, challenge_name, challenge_url):
         plain_msg = '{solver_name} solved {challenge_name}'.format(
             solver_name=solver_name,
@@ -65,6 +72,13 @@ class SlackNotifier(BaseNotifier):
         })
 
 class DiscordNotifier(BaseNotifier):
+    def get_settings(self):
+        return ['notifier_discord_webhook_url']
+    def get_webhook_url(self):
+        return get_config('notifier_discord_webhook_url')
+    def is_configured(self):
+        return bool(self.get_webhook_url())
+
     def notify_solve(self, solver_name, solver_url, challenge_name, challenge_url):
         markdown_msg = '[{solver_name}]({solver_url}) solved [{challenge_name}]({challenge_url})'.format(
             solver_name=solver_name,
@@ -102,32 +116,48 @@ def get_configured_notifier():
         return None
     return notifier
 
+def get_all_notifier_settings():
+    settings = set()
+    for k,v in NOTIFIER_CLASSES.items():
+        for setting in v.get_settings():
+            if setting in settings:
+                raise Exception('Notifier {0} uses duplicate setting name {1}', v, setting)
+            settings.add(setting)
+    return settings
+
 def load(app):
-    admin_chat_notifier = Blueprint('admin_chat_notifier', __name__, template_folder='templates')
+    chat_notifier = Blueprint('chat_notifier', __name__, template_folder='templates')
 
-    @admin_chat_notifier.route('/admin/chat_notifier', methods=['GET', 'POST'])
+    @chat_notifier.route('/admin/chat_notifier', methods=['GET', 'POST'])
     @admins_only
-    def admin_config_chat_notifier():
+    def chat_notifier_admin():
         clear_config()
-
         if request.method == "POST":
             if request.form['notifier_type'] and request.form['notifier_type'] not in NOTIFIER_CLASSES.keys():
                 abort(400)
             set_config('notifier_type', request.form['notifier_type'])
-            set_config('notifier_webhook_url', request.form['notifier_webhook_url'])
             set_config('notifier_send_solves', 'notifier_send_solves' in request.form)
             set_config('notifier_send_notifications', 'notifier_send_notifications' in request.form)
-            return redirect(request.url)
+            for setting in get_all_notifier_settings():
+                set_config(setting, request.form[setting])
+            return redirect(url_for('chat_notifier.chat_notifier_admin'))
+        else:
+            context = {
+                'nonce': session['nonce'],
+                'supported_notifier_types': NOTIFIER_CLASSES.keys(),
+                'notifier_type': get_config('notifier_type'),
+                'notifier_send_solves': get_config('notifier_send_solves'),
+                'notifier_send_notifications': get_config('notifier_send_notifications'),
+            }
+            for setting in get_all_notifier_settings():
+                context[setting] = get_config(setting)
+            supported_notifier_settings = {}
+            for k,v in NOTIFIER_CLASSES.items():
+                supported_notifier_settings[k] = Markup(render_template('chat_notifier/admin_notifier_settings/{}.html'.format(k), **context))
+            context['supported_notifier_settings'] = supported_notifier_settings
+            return render_template('chat_notifier/admin.html', **context)
 
-        return render_template('admin_chat_notifier.html',
-            supported_notifier_types=NOTIFIER_CLASSES.keys(),
-            notifier_type=get_config('notifier_type'),
-            notifier_webhook_url=get_config('notifier_webhook_url'),
-            notifier_send_solves=get_config('notifier_send_solves'),
-            notifier_send_notifications=get_config('notifier_send_notifications'),
-            nonce=session['nonce'])
-
-    app.register_blueprint(admin_chat_notifier)
+    app.register_blueprint(chat_notifier)
 
     def chal_solve_decorator(chal_solve_func):
         @wraps(chal_solve_func)
