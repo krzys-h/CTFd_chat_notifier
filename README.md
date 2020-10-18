@@ -15,8 +15,3 @@ Tested with CTFd 3.1.1.
 3. If your notifier requires any configuration (it probably needs at least a webhook url), override the `get_settings` method and create a settings template in `templates/chat_notifier/admin_notifier_settings/your_notifier_type_id.html`. Override `is_configured` to return True only when all required settings are configured correctly.
 4. Implement the `notify_solve` and `notify_message` methods
 5. Register your notifier type by creating an instance of your class and adding it to the `NOTIFIER_CLASSES` dictionary
-
-## TODO
-(contributions welcome!)
-
-* Add "this is the Nth solve" option
