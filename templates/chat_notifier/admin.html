@@ -46,6 +46,18 @@
 				<div class="form-group">
 					<div class="form-check">
 						<label>
+							<input id="notifier_send_notifications" name="notifier_send_notifications" type="checkbox" {% if notifier_send_notifications %}checked{% endif %}>
+							Send notifications<br>
+							<small>
+								Send information about notifications published by admins
+							</small>
+						</label>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<div class="form-check">
+						<label>
 							<input id="notifier_send_solves" name="notifier_send_solves" type="checkbox" {% if notifier_send_solves %}checked{% endif %}>
 							Send solves<br>
 							<small>
@@ -56,15 +68,15 @@
 				</div>
 
 				<div class="form-group">
-					<div class="form-check">
-						<label>
-							<input id="notifier_send_notifications" name="notifier_send_notifications" type="checkbox" {% if notifier_send_notifications %}checked{% endif %}>
-							Send notifications<br>
-							<small>
-								Send information about notifications published by admins
-							</small>
-						</label>
-					</div>
+					<label>
+						Solve text<br>
+						<small class="form-text text-muted">
+							Format to use for solve messages
+						</small>
+					</label>
+					<input class="form-control" id="notifier_solve_msg" name="notifier_solve_msg" type="text"
+						placeholder="{solver} solved {challenge}"
+						{% if notifier_solve_msg is defined and notifier_solve_msg != None %}value="{{ notifier_solve_msg }}"{% endif %}>
 				</div>
 
 				<input type="hidden" name="nonce" value="{{ nonce }}">

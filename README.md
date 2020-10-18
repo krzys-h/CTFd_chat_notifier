@@ -20,6 +20,5 @@ Tested with CTFd 3.1.1.
 (contributions welcome!)
 
 * Telegram support
-* Make it possible to change the solve message text
 * Add a threshold above which solve notifications will stop being sent (otherwise it may get quite irritating with 'sanity check' type challenges)
 * Add "this is the Nth solve" option

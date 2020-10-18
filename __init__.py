@@ -12,7 +12,7 @@ class BaseNotifier(object):
         return []
     def is_configured(self):
         return True
-    def notify_solve(self, solver_name, solver_url, challenge_name, challenge_url):
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url):
         pass
     def notify_message(self, title, content):
         pass
@@ -25,16 +25,14 @@ class SlackNotifier(BaseNotifier):
     def is_configured(self):
         return bool(self.get_webhook_url())
 
-    def notify_solve(self, solver_name, solver_url, challenge_name, challenge_url):
-        plain_msg = '{solver_name} solved {challenge_name}'.format(
-            solver_name=solver_name,
-            challenge_name=challenge_name,
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url):
+        plain_msg = format.format(
+            solver=solver_name,
+            challenge=challenge_name,
         )
-        markdown_msg = '<{solver_url}|{solver_name}> solved <{challenge_url}|{challenge_name}>'.format(
-            solver_name=solver_name,
-            solver_url=solver_url,
-            challenge_name=challenge_name,
-            challenge_url=challenge_url,
+        markdown_msg = format.format(
+            solver='<{solver_url}|{solver_name}>'.format(solver_name=solver_name, solver_url=solver_url),
+            challenge='<{challenge_url}|{challenge_name}>'.format(challenge_name=challenge_name, challenge_url=challenge_url),
         )
 
         requests.post(self.get_webhook_url(), json={
@@ -79,12 +77,10 @@ class DiscordNotifier(BaseNotifier):
     def is_configured(self):
         return bool(self.get_webhook_url())
 
-    def notify_solve(self, solver_name, solver_url, challenge_name, challenge_url):
-        markdown_msg = '[{solver_name}]({solver_url}) solved [{challenge_name}]({challenge_url})'.format(
-            solver_name=solver_name,
-            solver_url=solver_url,
-            challenge_name=challenge_name,
-            challenge_url=challenge_url,
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url):
+        markdown_msg = format.format(
+            solver='[{solver_name}]({solver_url})'.format(solver_name=solver_name, solver_url=solver_url),
+            challenge='[{challenge_name}]({challenge_url})'.format(challenge_name=challenge_name, challenge_url=challenge_url),
         )
 
         requests.post(self.get_webhook_url(), json={
@@ -136,8 +132,9 @@ def load(app):
             if request.form['notifier_type'] and request.form['notifier_type'] not in NOTIFIER_CLASSES.keys():
                 abort(400)
             set_config('notifier_type', request.form['notifier_type'])
-            set_config('notifier_send_solves', 'notifier_send_solves' in request.form)
             set_config('notifier_send_notifications', 'notifier_send_notifications' in request.form)
+            set_config('notifier_send_solves', 'notifier_send_solves' in request.form)
+            set_config('notifier_solve_msg', request.form['notifier_solve_msg'])
             for setting in get_all_notifier_settings():
                 set_config(setting, request.form[setting])
             return redirect(url_for('chat_notifier.chat_notifier_admin'))
@@ -146,8 +143,9 @@ def load(app):
                 'nonce': session['nonce'],
                 'supported_notifier_types': NOTIFIER_CLASSES.keys(),
                 'notifier_type': get_config('notifier_type'),
-                'notifier_send_solves': get_config('notifier_send_solves'),
                 'notifier_send_notifications': get_config('notifier_send_notifications'),
+                'notifier_send_solves': get_config('notifier_send_solves'),
+                'notifier_solve_msg': get_config('notifier_solve_msg'),
             }
             for setting in get_all_notifier_settings():
                 context[setting] = get_config(setting)
@@ -175,7 +173,7 @@ def load(app):
                 challenge = kwargs['challenge']
                 challenge_url = challenge_url='{url_for_listing}#{challenge.name}-{challenge.id}'.format(url_for_listing=url_for('challenges.listing', _external=True), challenge=challenge)
 
-                notifier.notify_solve(solver.name, solver_url, challenge.name, challenge_url)
+                notifier.notify_solve(get_config('notifier_solve_msg', '{solver} solved {challenge}'), solver.name, solver_url, challenge.name, challenge_url)
         return wrapper
     BaseChallenge.solve = chal_solve_decorator(BaseChallenge.solve)
 
