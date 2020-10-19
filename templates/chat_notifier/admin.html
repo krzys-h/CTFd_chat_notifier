@@ -101,14 +101,23 @@
 
 {% block entrypoint %}
 {{ super() }}
-<script defer>
-  /* TODO: I can't get jQuery to work because of webpack... */
-  function changeSettingsTo(notifier_name) {
-    document.querySelectorAll('.notifier_settings').forEach((x) => x.style.display = 'none');
-    if (notifier_name)
-      document.getElementById('notifier_settings-' + notifier_name).style.display = 'block';
-  }
-  document.getElementById('notifier_type').addEventListener("change", (e) => changeSettingsTo(e.target.value));
-  changeSettingsTo(document.getElementById('notifier_type').value);
+
+<script>
+window.onload = function() {
+  CTFd.plugin.run((_CTFd) => {
+    const $ = _CTFd.lib.$;
+
+    $(function() {
+      function changeSettingsTo(notifier_name) {
+        $('.notifier_settings').hide();
+        if (notifier_name)
+          $('#notifier_settings-' + notifier_name).show();
+      }
+
+      $('#notifier_type').change(function() { changeSettingsTo($(this).val()); });
+      changeSettingsTo($('#notifier_type').val());
+    });
+  });
+}
 </script>
 {% endblock %}
