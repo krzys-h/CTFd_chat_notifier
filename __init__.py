@@ -206,18 +206,17 @@ def load(app):
 
     def chal_solve_decorator(chal_solve_func):
         @wraps(chal_solve_func)
-        def wrapper(*args, **kwargs):
-            chal_solve_func(*args, **kwargs)
+        def wrapper(user, team, challenge, request):
+            chal_solve_func(user, team, challenge, request)
 
             notifier = get_configured_notifier()
             if notifier and bool(get_config('notifier_send_solves')):
                 if get_mode_as_word() == TEAMS_MODE:
-                    solver = kwargs['team']
+                    solver = team
                     solver_url = url_for("teams.public", team_id=solver.account_id, _external=True)
                 else:
-                    solver = kwargs['user']
+                    solver = user
                     solver_url = url_for("users.public", user_id=solver.account_id, _external=True)
-                challenge = kwargs['challenge']
                 challenge_url = challenge_url='{url_for_listing}#{challenge.name}-{challenge.id}'.format(url_for_listing=url_for('challenges.listing', _external=True), challenge=challenge)
 
                 Model = get_model()
