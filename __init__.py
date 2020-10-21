@@ -218,7 +218,7 @@ def load(app):
                 else:
                     solver = user
                     solver_url = url_for("users.public", user_id=solver.account_id, _external=True)
-                challenge_url = challenge_url='{url_for_listing}#{challenge.name}-{challenge.id}'.format(url_for_listing=url_for('challenges.listing', _external=True), challenge=challenge)
+                challenge_url = url_for('challenges.listing', _external=True, _anchor='{challenge.name}-{challenge.id}'.format(challenge=challenge))
 
                 Model = get_model()
                 solve_count = (
