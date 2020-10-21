@@ -1,6 +1,7 @@
 from CTFd.plugins.challenges import BaseChallenge
 from CTFd.utils.modes import TEAMS_MODE, get_mode_as_word, get_model
 from CTFd.utils.decorators import admins_only
+from CTFd.utils.humanize.numbers import ordinalize
 from CTFd.utils import get_config, set_config
 from CTFd.cache import clear_config
 from CTFd.models import Challenges, Solves, db
@@ -13,7 +14,7 @@ class BaseNotifier(object):
         return []
     def is_configured(self):
         return True
-    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_count):
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_num):
         pass
     def notify_message(self, title, content):
         pass
@@ -26,7 +27,7 @@ class SlackNotifier(BaseNotifier):
     def is_configured(self):
         return bool(self.get_webhook_url())
 
-    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_count):
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_num):
         plain_msg = format.format(
             solver=solver_name,
             challenge=challenge_name,
@@ -35,7 +36,7 @@ class SlackNotifier(BaseNotifier):
         markdown_msg = format.format(
             solver='<{solver_url}|{solver_name}>'.format(solver_name=solver_name, solver_url=solver_url),
             challenge='<{challenge_url}|{challenge_name}>'.format(challenge_name=challenge_name, challenge_url=challenge_url),
-            solve_count=solve_count,
+            solve_num=ordinalize(solve_num),
         )
 
         requests.post(self.get_webhook_url(), json={
@@ -80,11 +81,11 @@ class DiscordNotifier(BaseNotifier):
     def is_configured(self):
         return bool(self.get_webhook_url())
 
-    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_count):
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_num):
         markdown_msg = format.format(
             solver='[{solver_name}]({solver_url})'.format(solver_name=solver_name, solver_url=solver_url),
             challenge='[{challenge_name}]({challenge_url})'.format(challenge_name=challenge_name, challenge_url=challenge_url),
-            solve_count=solve_count,
+            solve_num=ordinalize(solve_num),
         )
 
         requests.post(self.get_webhook_url(), json={
@@ -118,11 +119,11 @@ class TelegramNotifier(BaseNotifier):
             s = s.replace(char, '\\' + char)
         return s
 
-    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_count):
+    def notify_solve(self, format, solver_name, solver_url, challenge_name, challenge_url, solve_num):
         markdown_msg = format.replace('(', '\\(').replace(')', '\\)').format(
             solver='[{solver_name}]({solver_url})'.format(solver_name=self._escape(solver_name), solver_url=self._escape(solver_url)),
             challenge='[{challenge_name}]({challenge_url})'.format(challenge_name=self._escape(challenge_name), challenge_url=self._escape(challenge_url)),
-            solve_count=solve_count,
+            solve_num=ordinalize(solve_num),
         )
 
         requests.post('https://api.telegram.org/bot{bot_token}/sendMessage'.format(bot_token=self.get_bot_token()), json={
@@ -234,7 +235,7 @@ def load(app):
                 max_solves = int(max_solves) if max_solves is not None else None
 
                 if max_solves is None or solve_count <= max_solves:
-                    notifier.notify_solve(get_config('notifier_solve_msg', '{solver} solved {challenge} ({solve_count} solves)'), solver.name, solver_url, challenge.name, challenge_url, solve_count)
+                    notifier.notify_solve(get_config('notifier_solve_msg', '{solver} solved {challenge} ({solve_num} solve)'), solver.name, solver_url, challenge.name, challenge_url, solve_count)
         return wrapper
     BaseChallenge.solve = chal_solve_decorator(BaseChallenge.solve)
 
