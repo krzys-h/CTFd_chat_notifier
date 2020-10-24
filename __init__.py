@@ -31,7 +31,7 @@ class SlackNotifier(BaseNotifier):
         plain_msg = format.format(
             solver=solver_name,
             challenge=challenge_name,
-            solve_num=solve_num,
+            solve_num=ordinalize(solve_num),
         )
         markdown_msg = format.format(
             solver='<{solver_url}|{solver_name}>'.format(solver_name=solver_name, solver_url=solver_url),
