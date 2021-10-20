@@ -49,7 +49,7 @@ class SlackNotifier(BaseNotifier):
                         "text": markdown_msg
                     }
                 },
-                ]
+            ]
         })
 
     def notify_message(self, title, content):
