@@ -212,9 +212,9 @@ def load(app):
 
             notifier = get_configured_notifier()
             if notifier and bool(get_config('notifier_send_solves')):
-                if get_mode_as_word() == TEAMS_MODE:
+                if get_mode_as_word(plural=True) == TEAMS_MODE:
                     solver = team
-                    solver_url = url_for("teams.public", team_id=solver.account_id, _external=True)
+                    solver_url = url_for("teams.public", team_id=solver.id, _external=True)
                 else:
                     solver = user
                     solver_url = url_for("users.public", user_id=solver.account_id, _external=True)
